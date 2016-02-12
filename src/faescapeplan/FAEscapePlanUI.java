@@ -5,6 +5,9 @@
  */
 package faescapeplan;
 
+import java.io.File;
+import javax.swing.JFileChooser;
+
 /**
  *
  * @author Owner
@@ -27,6 +30,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        saveLocChooser = new javax.swing.JFileChooser();
         iconPanel = new javax.swing.JPanel();
         iconDisplay = new javax.swing.JLabel();
         loginButton = new javax.swing.JButton();
@@ -62,11 +66,16 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         downloadBar = new javax.swing.JProgressBar();
         jScrollPane1 = new javax.swing.JScrollPane();
         logTextBox = new javax.swing.JTextArea();
-        jMenuBar1 = new javax.swing.JMenuBar();
+        menuBar = new javax.swing.JMenuBar();
         menuFile = new javax.swing.JMenu();
         menuExit = new javax.swing.JMenuItem();
         menuHelp = new javax.swing.JMenu();
         menuAbout = new javax.swing.JMenuItem();
+
+        saveLocChooser.setAcceptAllFileFilterUsed(false);
+        saveLocChooser.setDialogType(javax.swing.JFileChooser.CUSTOM_DIALOG);
+        saveLocChooser.setDialogTitle("Select backup folder location");
+        saveLocChooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Test");
@@ -90,6 +99,11 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         );
 
         loginButton.setText("Log In");
+        loginButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                loginButtonMouseClicked(evt);
+            }
+        });
 
         jSeparator1.setOrientation(javax.swing.SwingConstants.VERTICAL);
         jSeparator1.setPreferredSize(new java.awt.Dimension(10, 50));
@@ -175,12 +189,15 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
         saveLocTitle.setText("Backup folder:");
 
-        saveLocText.setEditable(false);
         saveLocText.setBackground(new java.awt.Color(255, 255, 255));
         saveLocText.setText("C:\\");
-            saveLocText.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
 
             saveLocButton.setText("...");
+            saveLocButton.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    saveLocButtonMouseClicked(evt);
+                }
+            });
 
             javax.swing.GroupLayout settingsPanelLayout = new javax.swing.GroupLayout(settingsPanel);
             settingsPanel.setLayout(settingsPanelLayout);
@@ -279,18 +296,23 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             menuFile.setText("File");
 
             menuExit.setText("Exit");
+            menuExit.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    menuExitActionPerformed(evt);
+                }
+            });
             menuFile.add(menuExit);
 
-            jMenuBar1.add(menuFile);
+            menuBar.add(menuFile);
 
             menuHelp.setText("Help");
 
             menuAbout.setText("About...");
             menuHelp.add(menuAbout);
 
-            jMenuBar1.add(menuHelp);
+            menuBar.add(menuHelp);
 
-            setJMenuBar(jMenuBar1);
+            setJMenuBar(menuBar);
 
             javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
             getContentPane().setLayout(layout);
@@ -345,6 +367,26 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             pack();
         }// </editor-fold>//GEN-END:initComponents
 
+    private void loginButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginButtonMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_loginButtonMouseClicked
+
+    private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_menuExitActionPerformed
+
+    private void saveLocButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_saveLocButtonMouseClicked
+        int returnVal = saveLocChooser.showDialog(this, "Select");
+        
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            System.out.println("getSelectedFile() : " + saveLocChooser.getSelectedFile());
+            File folder = saveLocChooser.getSelectedFile();
+            this.saveLocText.setText(folder.getAbsolutePath());
+        } else {
+            System.out.println("No Selection");
+        }
+    }//GEN-LAST:event_saveLocButtonMouseClicked
+
     /**
      * @param args the command line arguments
      */
@@ -390,7 +432,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     private javax.swing.JLabel galleryTitle;
     private javax.swing.JLabel iconDisplay;
     private javax.swing.JPanel iconPanel;
-    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JSeparator jSeparator2;
@@ -405,6 +446,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     private javax.swing.JTextField loginUser;
     private javax.swing.JLabel loginUserTitle;
     private javax.swing.JMenuItem menuAbout;
+    private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem menuExit;
     private javax.swing.JMenu menuFile;
     private javax.swing.JMenu menuHelp;
@@ -412,6 +454,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     private javax.swing.JLabel notesCount;
     private javax.swing.JLabel notesTitle;
     private javax.swing.JButton saveLocButton;
+    private javax.swing.JFileChooser saveLocChooser;
     private javax.swing.JTextField saveLocText;
     private javax.swing.JLabel saveLocTitle;
     private javax.swing.JComboBox<String> scrapsAction;
