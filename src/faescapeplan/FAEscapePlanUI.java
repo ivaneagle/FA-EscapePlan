@@ -6,14 +6,26 @@
 package faescapeplan;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import org.jsoup.Connection;
+import org.jsoup.Connection.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 /**
  *
  * @author Owner
  */
 public class FAEscapePlanUI extends javax.swing.JFrame {
-
+    
+    UserData userData = new UserData();
+    
     /**
      * Creates new form FAEscapePlanUI
      */
@@ -21,6 +33,16 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         initComponents();
     }
 
+    private void loginConnect() {
+        //Transfer login procedure here
+    }
+    
+    private void loginDisconnect() {
+        this.loginUser.setEditable(true);
+        this.loginPass.setEditable(true);
+        this.loginButton.setText("Log In");
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -63,7 +85,8 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         saveLocTitle = new javax.swing.JLabel();
         saveLocText = new javax.swing.JTextField();
         saveLocButton = new javax.swing.JButton();
-        downloadBar = new javax.swing.JProgressBar();
+        backupProgress = new javax.swing.JProgressBar();
+        backupButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         logTextBox = new javax.swing.JTextArea();
         menuBar = new javax.swing.JMenuBar();
@@ -189,13 +212,20 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
         saveLocTitle.setText("Backup folder:");
 
-        saveLocText.setBackground(new java.awt.Color(255, 255, 255));
         saveLocText.setText("C:\\");
 
             saveLocButton.setText("...");
             saveLocButton.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
                     saveLocButtonMouseClicked(evt);
+                }
+            });
+
+            backupButton.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
+            backupButton.setText("START");
+            backupButton.addActionListener(new java.awt.event.ActionListener() {
+                public void actionPerformed(java.awt.event.ActionEvent evt) {
+                    backupButtonActionPerformed(evt);
                 }
             });
 
@@ -245,7 +275,10 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                                     .addGap(18, 18, 18)
                                     .addComponent(journalsAction, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                             .addGap(0, 0, Short.MAX_VALUE))
-                        .addComponent(downloadBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(settingsPanelLayout.createSequentialGroup()
+                            .addComponent(backupProgress, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(backupButton, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addContainerGap())
             );
             settingsPanelLayout.setVerticalGroup(
@@ -284,8 +317,12 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                         .addComponent(saveLocTitle)
                         .addComponent(saveLocText, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(saveLocButton))
-                    .addGap(18, 18, 18)
-                    .addComponent(downloadBar, javax.swing.GroupLayout.DEFAULT_SIZE, 30, Short.MAX_VALUE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+                    .addGroup(settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(backupButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, settingsPanelLayout.createSequentialGroup()
+                            .addComponent(backupProgress, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(8, 8, 8)))
                     .addContainerGap())
             );
 
@@ -322,9 +359,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 .addGroup(layout.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(jScrollPane1)
-                            .addContainerGap())
+                        .addComponent(jScrollPane1)
                         .addGroup(layout.createSequentialGroup()
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                 .addComponent(loginUserTitle)
@@ -336,8 +371,8 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                             .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(settingsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addContainerGap())))
+                            .addComponent(settingsPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addContainerGap())
             );
             layout.setVerticalGroup(
                 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -359,7 +394,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                             .addComponent(loginButton))
                         .addComponent(jSeparator1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(statusBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             );
@@ -368,7 +403,41 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginButtonMouseClicked
-        // TODO add your handling code here:
+        if (this.loginUser.getText().trim().isEmpty() || Arrays.toString(this.loginPass.getPassword()).trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Fields cannot be empty.");
+        } else {
+            try {
+                String pass = String.valueOf(this.loginPass.getPassword());
+                this.loginButton.setEnabled(false);
+                this.loginUser.setEditable(false);
+                this.loginPass.setEditable(false);
+                Connection c = Jsoup.connect("https://www.furaffinity.net/login/")
+                        .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
+                        .data("action", "login")
+                        .data("name", this.loginUser.getText())
+                        .data("pass", String.valueOf(this.loginPass.getPassword()))
+                        .data("login", "Login+to FurAffinity")
+                        .referrer("http://www.furaffinity.net/login/")
+                        .timeout(10000)
+                        .method(Connection.Method.POST);
+                Response response = c.execute();
+                String body = response.body();
+                System.out.println(this.loginUser.getText());
+                System.out.println(body);
+                
+                userData.setName(this.loginUser.getText());
+                this.loginButton.setText("Log Out");
+                this.userTitle.setText(userData.getName());
+                this.statusText.setText("Logged in as " + userData.getName());
+            } catch (IOException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Could not connect to FA");
+                this.loginUser.setEditable(true);
+                this.loginPass.setEditable(true);
+            } finally {
+                this.loginButton.setEnabled(true);
+            }
+        }
     }//GEN-LAST:event_loginButtonMouseClicked
 
     private void menuExitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuExitActionPerformed
@@ -379,13 +448,17 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         int returnVal = saveLocChooser.showDialog(this, "Select");
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            System.out.println("getSelectedFile() : " + saveLocChooser.getSelectedFile());
+            System.out.println("getSelectedFile() : " + saveLocChooser.getSelectedFile()); //REMOVE LATER
             File folder = saveLocChooser.getSelectedFile();
             this.saveLocText.setText(folder.getAbsolutePath());
         } else {
-            System.out.println("No Selection");
+            System.out.println("No Selection"); //REMOVE LATER
         }
     }//GEN-LAST:event_saveLocButtonMouseClicked
+
+    private void backupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backupButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_backupButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -413,7 +486,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(FAEscapePlanUI.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-
+        
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -423,7 +496,8 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JProgressBar downloadBar;
+    private javax.swing.JButton backupButton;
+    private javax.swing.JProgressBar backupProgress;
     private javax.swing.JComboBox<String> favsAction;
     private javax.swing.JLabel favsCount;
     private javax.swing.JLabel favsTitle;
