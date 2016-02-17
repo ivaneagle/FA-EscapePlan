@@ -7,8 +7,8 @@ package faescapeplan;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -31,16 +31,54 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
      */
     public FAEscapePlanUI() {
         initComponents();
+        this.loginUser.requestFocusInWindow();
     }
-
+    
     private void loginConnect() {
         //Transfer login procedure here
     }
     
     private void loginDisconnect() {
+        //delete token
+        //lockForm();
+        this.loginUser.setText("");
         this.loginUser.setEditable(true);
+        this.loginPass.setText("");
         this.loginPass.setEditable(true);
         this.loginButton.setText("Log In");
+    }
+    
+    private void getUnsecureCookies() {
+        
+    }
+    
+    private void getAllCookies() {
+        
+    }
+    
+    private void unlockForm() {
+        userData.setName(this.loginUser.getText());
+        this.loginButton.setText("Log Out");
+        this.userTitle.setText(userData.getName());
+        this.galleryAction.setEnabled(true);
+        this.scrapsAction.setEnabled(true);
+        this.favsAction.setEnabled(true);
+        this.journalsAction.setEnabled(true);
+        this.notesAction.setEnabled(true);
+        this.backupButton.setEnabled(true);
+        this.statusText.setText("Logged in as " + userData.getName());
+    }
+    
+    private void lockForm() {
+        
+    }
+    
+    private void getProfileImg() {
+        
+    }
+    
+    private void updateTextLog() {
+        
     }
     
     /**
@@ -101,7 +139,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         saveLocChooser.setFileSelectionMode(javax.swing.JFileChooser.DIRECTORIES_ONLY);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Test");
+        setTitle("FAEscapePlan");
         setBackground(new java.awt.Color(255, 255, 255));
         setResizable(false);
         setSize(new java.awt.Dimension(751, 418));
@@ -181,12 +219,15 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
         galleryAction.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         galleryAction.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Update backup", "Overwrite backup", "No action" }));
+        galleryAction.setEnabled(false);
 
         scrapsAction.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         scrapsAction.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Update backup", "Overwrite backup", "No action" }));
+        scrapsAction.setEnabled(false);
 
         favsAction.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         favsAction.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Update backup", "Overwrite backup", "No action" }));
+        favsAction.setEnabled(false);
 
         jSeparator2.setOrientation(javax.swing.SwingConstants.VERTICAL);
 
@@ -206,9 +247,11 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
         journalsAction.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         journalsAction.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Update backup", "Overwrite backup", "No action" }));
+        journalsAction.setEnabled(false);
 
         notesAction.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         notesAction.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Update backup", "Overwrite backup", "No action" }));
+        notesAction.setEnabled(false);
 
         saveLocTitle.setText("Backup folder:");
 
@@ -223,6 +266,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
             backupButton.setFont(new java.awt.Font("Arial", 0, 18)); // NOI18N
             backupButton.setText("START");
+            backupButton.setEnabled(false);
             backupButton.addActionListener(new java.awt.event.ActionListener() {
                 public void actionPerformed(java.awt.event.ActionEvent evt) {
                     backupButtonActionPerformed(evt);
@@ -403,32 +447,60 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginButtonMouseClicked
-        if (this.loginUser.getText().trim().isEmpty() || Arrays.toString(this.loginPass.getPassword()).trim().isEmpty()) {
+        if (this.loginUser.getText().trim().isEmpty() || String.valueOf(this.loginPass.getPassword()).trim().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Fields cannot be empty.");
         } else {
             try {
-                String pass = String.valueOf(this.loginPass.getPassword());
+                this.logTextBox.append("Logging in...");
+                this.logTextBox.update(this.logTextBox.getGraphics());
                 this.loginButton.setEnabled(false);
                 this.loginUser.setEditable(false);
                 this.loginPass.setEditable(false);
-                Connection c = Jsoup.connect("https://www.furaffinity.net/login/")
+                
+                //acquire unsecure cookies
+                Map<String, String> sessionCookies = Jsoup.connect("http://www.furaffinity.net")
+                        .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
+                        .execute()
+                        .cookies();
+                
+                for (Map.Entry<String, String> entry : sessionCookies.entrySet()) {
+                    System.out.println(entry.getKey() + ":" + entry.getValue());
+                }
+                
+                Response loginResponse = Jsoup.connect("https://www.furaffinity.net/login/")
                         .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
                         .data("action", "login")
                         .data("name", this.loginUser.getText())
                         .data("pass", String.valueOf(this.loginPass.getPassword()))
                         .data("login", "Login+to FurAffinity")
+                        .cookies(sessionCookies)
                         .referrer("http://www.furaffinity.net/login/")
                         .timeout(10000)
-                        .method(Connection.Method.POST);
-                Response response = c.execute();
-                String body = response.body();
-                System.out.println(this.loginUser.getText());
-                System.out.println(body);
+                        .method(Connection.Method.POST)
+                        .execute();
+                Document doc = loginResponse.parse();
                 
-                userData.setName(this.loginUser.getText());
-                this.loginButton.setText("Log Out");
-                this.userTitle.setText(userData.getName());
-                this.statusText.setText("Logged in as " + userData.getName());
+                if (!doc.getElementById("my-username").text().equalsIgnoreCase("~" + this.loginUser.getText())) {
+                    JOptionPane.showMessageDialog(this, "Login failed, check your username and password");
+                    System.out.println("Login failed");
+                    System.out.println(doc.getElementById("my-username").text());
+                } else {
+                    sessionCookies.putAll(loginResponse.cookies());
+                    userData.setCookies(sessionCookies);
+                    System.out.println(doc.title());
+
+                    for (Map.Entry<String, String> entry : sessionCookies.entrySet()) {
+                        System.out.println(entry.getKey() + ":" + entry.getValue());
+                    }
+                    //test for logged in content
+                    Document test = Jsoup.connect("http://www.furaffinity.net/favorites/foxlightning/")
+                            .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
+                            .cookies(sessionCookies)
+                            .get();
+                    System.out.println(test.outerHtml());
+                    
+                    unlockForm();
+                }
             } catch (IOException ex) {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
                 System.out.println("Could not connect to FA");

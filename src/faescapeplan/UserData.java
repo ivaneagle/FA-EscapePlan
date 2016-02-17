@@ -5,13 +5,15 @@
  */
 package faescapeplan;
 
+import java.util.Map;
+
 /**
  *
  * @author Owner
  */
 public class UserData {
     private String name;
-    private String token;
+    private Map<String, String> cookies;
     private boolean loggedIn;
     
     public UserData() {
@@ -28,13 +30,13 @@ public class UserData {
         this.name = userName;
     }
     
-    public String getToken() {
-        String userToken = this.token;
-        return userToken;
+    public Map<String, String> getCookies() {
+        Map<String, String> userCookies = this.cookies;
+        return userCookies;
     }
     
-    public void setToken(String userToken) {
-        this.token = userToken;
+    public void setCookies(Map<String, String> userCookies) {
+        this.cookies = userCookies;
     }
     
     public boolean getLoginState() {
