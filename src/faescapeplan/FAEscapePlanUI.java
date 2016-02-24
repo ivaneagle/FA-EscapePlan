@@ -6,8 +6,11 @@
 package faescapeplan;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
+import java.net.SocketTimeoutException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,6 +18,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -77,7 +81,11 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         
     }
     
-    private void updateTextLog() {
+    private void updateTextLog(String message) {
+        
+    }
+    
+    private void indexSection(String section) {
         
     }
     
@@ -457,15 +465,10 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 this.loginUser.setEditable(false);
                 this.loginPass.setEditable(false);
                 
-                //acquire unsecure cookies
                 Map<String, String> sessionCookies = Jsoup.connect("http://www.furaffinity.net")
                         .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
                         .execute()
                         .cookies();
-                
-                for (Map.Entry<String, String> entry : sessionCookies.entrySet()) {
-                    System.out.println(entry.getKey() + ":" + entry.getValue());
-                }
                 
                 Response loginResponse = Jsoup.connect("https://www.furaffinity.net/login/")
                         .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
@@ -523,13 +526,35 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             System.out.println("getSelectedFile() : " + saveLocChooser.getSelectedFile()); //REMOVE LATER
             File folder = saveLocChooser.getSelectedFile();
             this.saveLocText.setText(folder.getAbsolutePath());
-        } else {
-            System.out.println("No Selection"); //REMOVE LATER
         }
     }//GEN-LAST:event_saveLocButtonMouseClicked
 
     private void backupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backupButtonActionPerformed
-        // TODO add your handling code here:
+        //if path doesn't exist
+        if (!Files.isDirectory(Paths.get(this.saveLocText.getText()))) {
+            JOptionPane.showMessageDialog(this, "Save location doesn't exist.");
+        } else {
+            try {
+                //download test image
+                Response response = Jsoup.connect("http://d.facdn.net/art/blotch/1213562519/1213562519.blotch_ilikeyou.jpg")
+                        .cookies(userData.getCookies())
+                        .maxBodySize(0)
+                        .ignoreContentType(true)
+                        .execute(); 
+                try (FileOutputStream out = new FileOutputStream(new File("C:\\Users\\Owner\\Documents\\FAEscape\\test.png"))) {
+                    out.write(response.bodyAsBytes());
+                }
+            } catch (HttpStatusException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(this, "Could not connect to FA");
+            } catch (SocketTimeoutException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(this, "Connection timed out");
+            } catch (IOException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(this, "An IO Exception occurred");
+            }
+        }
     }//GEN-LAST:event_backupButtonActionPerformed
 
     /**
