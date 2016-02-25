@@ -536,7 +536,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         } else {
             try {
                 //download test image
-                Response response = Jsoup.connect("http://d.facdn.net/art/blotch/1213562519/1213562519.blotch_ilikeyou.jpg")
+                Response response = Jsoup.connect("http://d.facdn.net/art/loculi/1391814174/1391814174.loculi_rrowdy_v_final2_fa_.jpg")
                         .cookies(userData.getCookies())
                         .maxBodySize(0)
                         .ignoreContentType(true)
