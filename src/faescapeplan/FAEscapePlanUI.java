@@ -7,10 +7,14 @@ package faescapeplan;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,6 +25,8 @@ import org.jsoup.Connection.Response;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  *
@@ -28,14 +34,15 @@ import org.jsoup.nodes.Document;
  */
 public class FAEscapePlanUI extends javax.swing.JFrame {
     
-    UserData userData = new UserData();
+    UserData userData = new UserData();  
     
-    /**
-     * Creates new form FAEscapePlanUI
-     */
+    public static final String VERSION = "0.2";
+    public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
+    
     public FAEscapePlanUI() {
         initComponents();
         this.loginUser.requestFocusInWindow();
+        this.saveLocText.setText(System.getProperty("user.home"));
     }
     
     private void loginConnect() {
@@ -43,38 +50,40 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     }
     
     private void loginDisconnect() {
-        //delete token
-        //lockForm();
+        userData.clearData();
+        userData.setLoginState(false);
+    }
+    
+    private void getSessionCookies() {
+        // REFACTOR
+    }
+    
+    private void unlockForm() {
+        this.loginButton.setText("Log Out");
+        this.userTitle.setText(userData.getName());
+        this.galleryAction.setEnabled(true);
+        //this.scrapsAction.setEnabled(true); //RESTORE LATER
+        //this.favsAction.setEnabled(true);
+        //this.journalsAction.setEnabled(true);
+        //this.notesAction.setEnabled(true);
+        this.backupButton.setEnabled(true);
+        this.statusText.setText("Logged in as " + userData.getName());
+    }
+    
+    private void resetForm() {
         this.loginUser.setText("");
         this.loginUser.setEditable(true);
         this.loginPass.setText("");
         this.loginPass.setEditable(true);
         this.loginButton.setText("Log In");
-    }
-    
-    private void getUnsecureCookies() {
-        
-    }
-    
-    private void getAllCookies() {
-        
-    }
-    
-    private void unlockForm() {
-        userData.setName(this.loginUser.getText());
-        this.loginButton.setText("Log Out");
-        this.userTitle.setText(userData.getName());
-        this.galleryAction.setEnabled(true);
-        this.scrapsAction.setEnabled(true);
-        this.favsAction.setEnabled(true);
-        this.journalsAction.setEnabled(true);
-        this.notesAction.setEnabled(true);
-        this.backupButton.setEnabled(true);
-        this.statusText.setText("Logged in as " + userData.getName());
-    }
-    
-    private void lockForm() {
-        
+        this.userTitle.setText("Username");
+        this.galleryAction.setEnabled(false);
+        this.scrapsAction.setEnabled(false);
+        this.favsAction.setEnabled(false);
+        this.journalsAction.setEnabled(false);
+        this.notesAction.setEnabled(false);
+        this.backupButton.setEnabled(false);
+        this.statusText.setText("Not logged in");
     }
     
     private void getProfileImg() {
@@ -82,11 +91,131 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     }
     
     private void updateTextLog(String message) {
-        
+        this.logTextBox.append(message + "\n");
+        this.logTextBox.update(this.logTextBox.getGraphics());
     }
     
-    private void indexSection(String section) {
+    private void loadSettings() {
+        try (FileReader file = new FileReader("C:\\")) {
+            file.read();
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void createDirectory(String path) {
+        if (!Files.isDirectory(Paths.get(path))) {
+            boolean folderCreated = new File(path).mkdir();
+            
+            if (folderCreated) {
+                System.out.println("Folder created successfully");
+            } else {
+                System.out.println("Folder could not be created");
+            }
+        }
+
+    }
+    
+    private void downloadTestImage() {
+        try {
+            Response response = Jsoup.connect("http://d.facdn.net/art/loculi/1391814174/1391814174.loculi_rrowdy_v_final2_fa_.jpg")
+                    .cookies(userData.getCookies())
+                    .maxBodySize(0)
+                    .ignoreContentType(true)
+                    .execute(); 
+            try (FileOutputStream out = new FileOutputStream(new File("C:\\Users\\Owner\\Documents\\FAEscape\\test.png"))) {
+                out.write(response.bodyAsBytes());
+            }
+        } catch (HttpStatusException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Could not connect to FA");
+        } catch (SocketTimeoutException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "Connection timed out");
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "An IO Exception occurred");
+        }
+    }
+    
+    private ArrayList<String> indexSection(String section) {
+        ArrayList<String> idList = new ArrayList<>();
+        boolean itemsRemain = true;
+        int pageCount = 1;
+        updateTextLog("Indexing " + section + "...");
         
+        while (itemsRemain) {
+            try {
+                Document currentPage = Jsoup.connect("http://www.furaffinity.net/" + section + "/" + userData.getName() + "/" + pageCount + "/") // TEST
+                        .timeout(10000)
+                        .userAgent(USER_AGENT)
+                        .cookies(userData.getCookies())
+                        .get();
+
+                if (currentPage.getElementById("no-images") == null) {
+                    updateTextLog("Indexing page " + pageCount);
+                    Elements elementList = currentPage.getElementsByAttributeValueMatching("id", "sid_\\d+");
+
+                    for (Element item : elementList) {
+                        String cleanId = item.attr("id").replace("sid_", "");
+                        idList.add(cleanId);
+                    }
+                    
+                    pageCount++;
+                } else {
+                    itemsRemain = false;
+                    updateTextLog("Finished indexing " + section);
+                }
+
+            } catch (HttpStatusException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Could not connect to FA"); // DEBUG
+                break;
+            } catch (SocketTimeoutException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Connection timed out"); // DEBUG
+                break;
+            } catch (IOException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("An IO Exception occurred"); // DEBUG
+                break;
+            }
+        }
+        
+        return idList;
+    }
+    
+    private void downloadImageList(ArrayList<String> input, String downloadLoc) {        
+        for (String item : input) {
+            try {
+                updateTextLog("Getting item");
+                Document doc = Jsoup.connect("http://www.furaffinity.net/view/" + item + "/")
+                        .cookies(userData.getCookies())
+                        .userAgent(USER_AGENT)
+                        .get();
+                String downloadLink = "http:" + doc.getElementById("submissionImg").attr("src");
+                String downloadTitle = doc.getElementById("submissionImg").attr("alt");
+                String fileType = downloadLink.substring(downloadLink.length() - 4);
+                Response response = Jsoup.connect(downloadLink)
+                        .cookies(userData.getCookies())
+                        .maxBodySize(0)
+                        .ignoreContentType(true)
+                        .execute();
+                updateTextLog("Saving item");
+                try (FileOutputStream out = new FileOutputStream(new File(downloadLoc + "\\" + downloadTitle + fileType))) {
+                    out.write(response.bodyAsBytes());
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                updateTextLog("An IO Exception occurred");
+            }
+            
+        }
+        System.out.println("downloadImageList was called"); // DEBUG
+    }
+    
+    private void indexJournals() {
+        //Elements elementList = currentPage.getElementsByAttributeValueMatching("id", "jid:\\d+");
     }
     
     /**
@@ -133,6 +262,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         saveLocButton = new javax.swing.JButton();
         backupProgress = new javax.swing.JProgressBar();
         backupButton = new javax.swing.JButton();
+        refreshButton = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         logTextBox = new javax.swing.JTextArea();
         menuBar = new javax.swing.JMenuBar();
@@ -281,6 +411,13 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 }
             });
 
+            refreshButton.setText("Refresh");
+            refreshButton.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    refreshButtonMouseClicked(evt);
+                }
+            });
+
             javax.swing.GroupLayout settingsPanelLayout = new javax.swing.GroupLayout(settingsPanel);
             settingsPanel.setLayout(settingsPanelLayout);
             settingsPanelLayout.setHorizontalGroup(
@@ -288,7 +425,10 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 .addGroup(settingsPanelLayout.createSequentialGroup()
                     .addGroup(settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addComponent(jSeparator3)
-                        .addComponent(userTitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(settingsPanelLayout.createSequentialGroup()
+                            .addComponent(userTitle, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(refreshButton))
                         .addGroup(settingsPanelLayout.createSequentialGroup()
                             .addComponent(saveLocTitle)
                             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -336,7 +476,9 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             settingsPanelLayout.setVerticalGroup(
                 settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(settingsPanelLayout.createSequentialGroup()
-                    .addComponent(userTitle)
+                    .addGroup(settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(userTitle)
+                        .addComponent(refreshButton))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                     .addGroup(settingsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addGroup(settingsPanelLayout.createSequentialGroup()
@@ -378,6 +520,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                     .addContainerGap())
             );
 
+            logTextBox.setEditable(false);
             logTextBox.setColumns(20);
             logTextBox.setRows(5);
             jScrollPane1.setViewportView(logTextBox);
@@ -446,7 +589,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                             .addComponent(loginButton))
                         .addComponent(jSeparator1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(statusBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
             );
@@ -455,63 +598,57 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         }// </editor-fold>//GEN-END:initComponents
 
     private void loginButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_loginButtonMouseClicked
-        if (this.loginUser.getText().trim().isEmpty() || String.valueOf(this.loginPass.getPassword()).trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Fields cannot be empty.");
-        } else {
-            try {
-                this.logTextBox.append("Logging in...");
-                this.logTextBox.update(this.logTextBox.getGraphics());
-                this.loginButton.setEnabled(false);
-                this.loginUser.setEditable(false);
-                this.loginPass.setEditable(false);
-                
-                Map<String, String> sessionCookies = Jsoup.connect("http://www.furaffinity.net")
-                        .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
-                        .execute()
-                        .cookies();
-                
-                Response loginResponse = Jsoup.connect("https://www.furaffinity.net/login/")
-                        .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
-                        .data("action", "login")
-                        .data("name", this.loginUser.getText())
-                        .data("pass", String.valueOf(this.loginPass.getPassword()))
-                        .data("login", "Login+to FurAffinity")
-                        .cookies(sessionCookies)
-                        .referrer("http://www.furaffinity.net/login/")
-                        .timeout(10000)
-                        .method(Connection.Method.POST)
-                        .execute();
-                Document doc = loginResponse.parse();
-                
-                if (!doc.getElementById("my-username").text().equalsIgnoreCase("~" + this.loginUser.getText())) {
-                    JOptionPane.showMessageDialog(this, "Login failed, check your username and password");
-                    System.out.println("Login failed");
-                    System.out.println(doc.getElementById("my-username").text());
-                } else {
-                    sessionCookies.putAll(loginResponse.cookies());
-                    userData.setCookies(sessionCookies);
-                    System.out.println(doc.title());
+        if (!userData.getLoginState()) {
+            if (this.loginUser.getText().trim().isEmpty() || String.valueOf(this.loginPass.getPassword()).trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Fields cannot be empty.");
+            } else {
+                try {
+                    updateTextLog("Logging in...");
+                    this.loginButton.setEnabled(false);
+                    this.loginUser.setEditable(false);
+                    this.loginPass.setEditable(false);
 
-                    for (Map.Entry<String, String> entry : sessionCookies.entrySet()) {
-                        System.out.println(entry.getKey() + ":" + entry.getValue());
-                    }
-                    //test for logged in content
-                    Document test = Jsoup.connect("http://www.furaffinity.net/favorites/foxlightning/")
-                            .userAgent("Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0")
+                    Map<String, String> sessionCookies = Jsoup.connect("http://www.furaffinity.net")
+                            .userAgent(USER_AGENT)
+                            .execute()
+                            .cookies();
+
+                    Response loginResponse = Jsoup.connect("https://www.furaffinity.net/login/")
+                            .userAgent(USER_AGENT)
+                            .data("action", "login")
+                            .data("name", this.loginUser.getText())
+                            .data("pass", String.valueOf(this.loginPass.getPassword()))
+                            .data("login", "Login+to FurAffinity")
                             .cookies(sessionCookies)
-                            .get();
-                    System.out.println(test.outerHtml());
-                    
-                    unlockForm();
+                            .referrer("http://www.furaffinity.net/login/")
+                            .timeout(10000)
+                            .method(Connection.Method.POST)
+                            .execute();
+                    Document doc = loginResponse.parse();
+
+                    if (!doc.getElementById("my-username").text().equalsIgnoreCase("~" + this.loginUser.getText())) {
+                        JOptionPane.showMessageDialog(this, "Login failed, check your username and password");
+                    } else {
+                        userData.setName(this.loginUser.getText());
+                        sessionCookies.putAll(loginResponse.cookies());
+                        userData.setCookies(sessionCookies);                
+                        this.loginPass.setText("000000000000");
+                        userData.setLoginState(true);
+                        unlockForm();
+                        updateTextLog("Successfully logged in");
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("Could not connect to FA");
+                    this.loginUser.setEditable(true);
+                    this.loginPass.setEditable(true);
+                } finally {
+                    this.loginButton.setEnabled(true);
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("Could not connect to FA");
-                this.loginUser.setEditable(true);
-                this.loginPass.setEditable(true);
-            } finally {
-                this.loginButton.setEnabled(true);
             }
+        } else {
+            loginDisconnect();
+            resetForm();
         }
     }//GEN-LAST:event_loginButtonMouseClicked
 
@@ -523,39 +660,36 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         int returnVal = saveLocChooser.showDialog(this, "Select");
         
         if (returnVal == JFileChooser.APPROVE_OPTION) {
-            System.out.println("getSelectedFile() : " + saveLocChooser.getSelectedFile()); //REMOVE LATER
             File folder = saveLocChooser.getSelectedFile();
             this.saveLocText.setText(folder.getAbsolutePath());
         }
     }//GEN-LAST:event_saveLocButtonMouseClicked
 
     private void backupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backupButtonActionPerformed
-        //if path doesn't exist
         if (!Files.isDirectory(Paths.get(this.saveLocText.getText()))) {
             JOptionPane.showMessageDialog(this, "Save location doesn't exist.");
         } else {
-            try {
-                //download test image
-                Response response = Jsoup.connect("http://d.facdn.net/art/loculi/1391814174/1391814174.loculi_rrowdy_v_final2_fa_.jpg")
-                        .cookies(userData.getCookies())
-                        .maxBodySize(0)
-                        .ignoreContentType(true)
-                        .execute(); 
-                try (FileOutputStream out = new FileOutputStream(new File("C:\\Users\\Owner\\Documents\\FAEscape\\test.png"))) {
-                    out.write(response.bodyAsBytes());
-                }
-            } catch (HttpStatusException ex) {
-                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(this, "Could not connect to FA");
-            } catch (SocketTimeoutException ex) {
-                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(this, "Connection timed out");
-            } catch (IOException ex) {
-                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(this, "An IO Exception occurred");
-            }
+            String homePath = this.saveLocText.getText() + "\\" + userData.getName();
+            createDirectory(homePath);
+            //index gallery
+            String galleryPath = homePath + "\\gallery";
+            createDirectory(galleryPath);
+            ArrayList<String> galleryIndex = indexSection("gallery");
+            downloadImageList(galleryIndex, galleryPath);
+            /*  
+                index scraps
+                index favs
+                index journals
+                index notes
+            */
+            //downloadTestImage(); //DEBUG
         }
     }//GEN-LAST:event_backupButtonActionPerformed
+
+    private void refreshButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_refreshButtonMouseClicked
+        ArrayList galleryIndex = this.indexSection("gallery");
+        this.galleryCount.setText(String.valueOf(galleryIndex.size()));
+    }//GEN-LAST:event_refreshButtonMouseClicked
 
     /**
      * @param args the command line arguments
@@ -624,6 +758,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     private javax.swing.JComboBox<String> notesAction;
     private javax.swing.JLabel notesCount;
     private javax.swing.JLabel notesTitle;
+    private javax.swing.JButton refreshButton;
     private javax.swing.JButton saveLocButton;
     private javax.swing.JFileChooser saveLocChooser;
     private javax.swing.JTextField saveLocText;

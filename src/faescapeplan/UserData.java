@@ -17,8 +17,7 @@ public class UserData {
     private boolean loggedIn;
     
     public UserData() {
-        //insert constructor here
-        this.setLoginState(false);
+        this.loggedIn = false;
     }
     
     public String getName() {
@@ -46,5 +45,10 @@ public class UserData {
     
     public void setLoginState(boolean login) {
         this.loggedIn = login;
+    }
+    
+    public void clearData() {
+        this.name = "";
+        this.cookies.clear();
     }
 }
