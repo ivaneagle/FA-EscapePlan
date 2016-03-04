@@ -60,7 +60,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         this.loginButton.setText("Log Out");
         this.userTitle.setText(userData.getName());
         this.galleryAction.setEnabled(true);
-        //this.scrapsAction.setEnabled(true); //RESTORE LATER
+        this.scrapsAction.setEnabled(true);
         //this.favsAction.setEnabled(true);
         //this.journalsAction.setEnabled(true);
         //this.notesAction.setEnabled(true);
@@ -75,6 +75,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         this.loginPass.setEditable(true);
         this.loginButton.setText("Log In");
         this.userTitle.setText("Username");
+        this.refreshButton.setEnabled(false);
         this.galleryAction.setEnabled(false);
         this.scrapsAction.setEnabled(false);
         this.favsAction.setEnabled(false);
@@ -181,6 +182,9 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 try (FileOutputStream out = new FileOutputStream(new File(downloadLoc + "\\" + downloadTitle + fileType))) {
                     out.write(response.bodyAsBytes());
                 }
+            } catch (SocketTimeoutException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                updateTextLog("Connection timed out");
             } catch (IOException ex) {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
                 updateTextLog("An IO Exception occurred");
@@ -647,12 +651,19 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             String homePath = this.saveLocText.getText() + "\\" + userData.getName();
             createDirectory(homePath);
             //index gallery
+            //if galleryAction = update or new
+            //if galleryAction = new
+            //wipe backup then proceed
             String galleryPath = homePath + "\\gallery";
             createDirectory(galleryPath);
             ArrayList<String> galleryIndex = indexSection("gallery");
             downloadImageList(galleryIndex, galleryPath);
+            //index scraps
+            String scrapsPath = homePath + "\\scraps";
+            createDirectory(scrapsPath);
+            ArrayList<String> scrapsIndex = indexSection("scraps");
+            downloadImageList(scrapsIndex, scrapsPath);
             /*  
-                index scraps
                 index favs
                 index journals
                 index notes
@@ -662,8 +673,10 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     }//GEN-LAST:event_backupButtonActionPerformed
 
     private void refreshButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_refreshButtonMouseClicked
-        ArrayList galleryIndex = this.indexSection("gallery");
+        ArrayList galleryIndex = indexSection("gallery");
         this.galleryCount.setText(String.valueOf(galleryIndex.size()));
+        ArrayList scrapsIndex = indexSection("scraps");
+        this.scrapsCount.setText(String.valueOf(scrapsIndex.size()));
     }//GEN-LAST:event_refreshButtonMouseClicked
 
     /**
