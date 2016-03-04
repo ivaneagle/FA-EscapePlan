@@ -13,8 +13,6 @@ import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -116,28 +114,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
     }
     
-    private void downloadTestImage() {
-        try {
-            Response response = Jsoup.connect("http://d.facdn.net/art/loculi/1391814174/1391814174.loculi_rrowdy_v_final2_fa_.jpg")
-                    .cookies(userData.getCookies())
-                    .maxBodySize(0)
-                    .ignoreContentType(true)
-                    .execute(); 
-            try (FileOutputStream out = new FileOutputStream(new File("C:\\Users\\Owner\\Documents\\FAEscape\\test.png"))) {
-                out.write(response.bodyAsBytes());
-            }
-        } catch (HttpStatusException ex) {
-            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(this, "Could not connect to FA");
-        } catch (SocketTimeoutException ex) {
-            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(this, "Connection timed out");
-        } catch (IOException ex) {
-            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(this, "An IO Exception occurred");
-        }
-    }
-    
     private ArrayList<String> indexSection(String section) {
         ArrayList<String> idList = new ArrayList<>();
         boolean itemsRemain = true;
@@ -211,7 +187,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             }
             
         }
-        System.out.println("downloadImageList was called"); // DEBUG
     }
     
     private void indexJournals() {
