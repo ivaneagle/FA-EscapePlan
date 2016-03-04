@@ -36,7 +36,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     
     UserData userData = new UserData();  
     
-    public static final String VERSION = "0.2";
+    public static final String VERSION = "0.3";
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
     
     public FAEscapePlanUI() {
