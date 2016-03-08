@@ -48,6 +48,19 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         this.notesAction.setSelectedIndex(1);
     }
     
+    private String getOS() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return "windows";
+        } else if (os.contains("mac")) {
+            return "mac";
+        } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+            return "unix";
+        } else {
+            throw new RuntimeException("Unsupported operating system");
+        }
+    }
+    
     private void loginConnect() {
         //Transfer login procedure here
     }
@@ -91,6 +104,8 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     }
     
     private void getProfileImg() {
+        String tempPath = System.getProperty("user.home") + "\\AppData\\Local\\FAEscapePlan";
+        this.createDirectory(tempPath);
         
     }
     
@@ -622,6 +637,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                         userData.setCookies(sessionCookies);                
                         this.loginPass.setText("000000000000");
                         userData.setLoginState(true);
+                        getProfileImg();
                         unlockForm();
                         updateTextLog("Successfully logged in");
                     }
@@ -661,7 +677,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             createDirectory(homePath);
             
             switch (this.galleryAction.getSelectedIndex()) {
-                
+                //allow fallthrough
             }
             //index gallery
             //if galleryAction = update or new
