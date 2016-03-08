@@ -73,11 +73,13 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <Component id="statusBar" max="32767" attributes="0"/>
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jScrollPane1" max="32767" attributes="0"/>
+                  <Group type="102" attributes="0">
+                      <Component id="jScrollPane1" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
                   <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
                           <Component id="loginUserTitle" alignment="0" min="-2" max="-2" attributes="0"/>
@@ -90,11 +92,12 @@
                       <EmptySpace type="unrelated" max="-2" attributes="0"/>
                       <Component id="jSeparator1" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="settingsPanel" max="32767" attributes="0"/>
+                      <Component id="settingsPanel" min="-2" pref="570" max="-2" attributes="0"/>
+                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
               </Group>
-              <EmptySpace max="-2" attributes="0"/>
           </Group>
+          <Component id="statusBar" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -225,14 +228,8 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" attributes="0">
-                  <Group type="103" groupAlignment="0" attributes="0">
-                      <Component id="jSeparator3" max="32767" attributes="0"/>
-                      <Group type="102" attributes="0">
-                          <Component id="userTitle" max="32767" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Component id="refreshButton" min="-2" max="-2" attributes="0"/>
-                      </Group>
+              <Group type="102" alignment="1" attributes="0">
+                  <Group type="103" groupAlignment="1" attributes="0">
                       <Group type="102" attributes="0">
                           <Component id="saveLocTitle" min="-2" max="-2" attributes="0"/>
                           <EmptySpace type="unrelated" max="-2" attributes="0"/>
@@ -240,53 +237,63 @@
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="saveLocButton" min="-2" pref="25" max="-2" attributes="0"/>
                       </Group>
+                      <Component id="jSeparator3" alignment="0" max="32767" attributes="0"/>
                       <Group type="102" attributes="0">
-                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                              <Component id="favsTitle" alignment="0" max="32767" attributes="0"/>
-                              <Component id="galleryTitle" alignment="0" max="32767" attributes="0"/>
-                              <Component id="scrapsTitle" alignment="0" max="32767" attributes="0"/>
-                          </Group>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                              <Component id="scrapsCount" alignment="0" pref="60" max="32767" attributes="0"/>
-                              <Component id="galleryCount" alignment="0" max="32767" attributes="0"/>
-                              <Component id="favsCount" max="32767" attributes="0"/>
-                          </Group>
-                          <EmptySpace type="separate" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="galleryAction" min="-2" max="-2" attributes="0"/>
-                              <Component id="scrapsAction" min="-2" max="-2" attributes="0"/>
-                              <Component id="favsAction" min="-2" max="-2" attributes="0"/>
-                          </Group>
+                          <Component id="userTitle" max="32767" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="jSeparator2" min="-2" pref="2" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="journalsTitle" max="32767" attributes="0"/>
-                              <Component id="notesTitle" max="32767" attributes="0"/>
-                          </Group>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Group type="102" attributes="0">
-                                  <Component id="notesCount" min="-2" pref="60" max="-2" attributes="0"/>
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                                  <Component id="notesAction" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Component id="journalsCount" min="-2" pref="60" max="-2" attributes="0"/>
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                                  <Component id="journalsAction" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                          </Group>
-                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <Component id="refreshButton" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Group type="102" attributes="0">
-                          <Component id="backupProgress" max="32767" attributes="0"/>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                          <Component id="backupButton" min="-2" pref="104" max="-2" attributes="0"/>
+                          <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Component id="backupProgress" max="32767" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="backupButton" min="-2" pref="104" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="favsTitle" alignment="0" max="32767" attributes="0"/>
+                                      <Component id="galleryTitle" alignment="0" max="32767" attributes="0"/>
+                                      <Component id="scrapsTitle" alignment="0" max="32767" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                      <Component id="scrapsCount" alignment="0" pref="60" max="32767" attributes="0"/>
+                                      <Component id="galleryCount" alignment="0" max="32767" attributes="0"/>
+                                      <Component id="favsCount" max="32767" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace type="separate" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="galleryAction" min="-2" max="-2" attributes="0"/>
+                                      <Component id="scrapsAction" min="-2" max="-2" attributes="0"/>
+                                      <Component id="favsAction" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jSeparator2" min="-2" pref="2" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="journalsTitle" max="32767" attributes="0"/>
+                                      <Component id="notesTitle" max="32767" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Group type="102" attributes="0">
+                                          <Component id="notesCount" min="-2" pref="60" max="-2" attributes="0"/>
+                                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                                          <Component id="notesAction" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Component id="journalsCount" min="-2" pref="60" max="-2" attributes="0"/>
+                                          <EmptySpace type="separate" max="-2" attributes="0"/>
+                                          <Component id="journalsAction" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                              </Group>
+                          </Group>
                       </Group>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace min="-2" pref="40" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -425,8 +432,8 @@
             </Property>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
               <StringArray count="3">
-                <StringItem index="0" value="Update backup"/>
-                <StringItem index="1" value="Overwrite backup"/>
+                <StringItem index="0" value="New Backup"/>
+                <StringItem index="1" value="Update backup"/>
                 <StringItem index="2" value="No action"/>
               </StringArray>
             </Property>
@@ -443,8 +450,8 @@
             </Property>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
               <StringArray count="3">
-                <StringItem index="0" value="Update backup"/>
-                <StringItem index="1" value="Overwrite backup"/>
+                <StringItem index="0" value="New Backup"/>
+                <StringItem index="1" value="Update backup"/>
                 <StringItem index="2" value="No action"/>
               </StringArray>
             </Property>
@@ -461,8 +468,8 @@
             </Property>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
               <StringArray count="3">
-                <StringItem index="0" value="Update backup"/>
-                <StringItem index="1" value="Overwrite backup"/>
+                <StringItem index="0" value="New Backup"/>
+                <StringItem index="1" value="Update backup"/>
                 <StringItem index="2" value="No action"/>
               </StringArray>
             </Property>
@@ -518,8 +525,8 @@
             </Property>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
               <StringArray count="3">
-                <StringItem index="0" value="Update backup"/>
-                <StringItem index="1" value="Overwrite backup"/>
+                <StringItem index="0" value="New Backup"/>
+                <StringItem index="1" value="Update backup"/>
                 <StringItem index="2" value="No action"/>
               </StringArray>
             </Property>
@@ -536,8 +543,8 @@
             </Property>
             <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
               <StringArray count="3">
-                <StringItem index="0" value="Update backup"/>
-                <StringItem index="1" value="Overwrite backup"/>
+                <StringItem index="0" value="New Backup"/>
+                <StringItem index="1" value="Update backup"/>
                 <StringItem index="2" value="No action"/>
               </StringArray>
             </Property>
