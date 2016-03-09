@@ -7,7 +7,6 @@ package faescapeplan;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
@@ -16,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.jsoup.Connection;
@@ -37,6 +37,8 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     public static final String VERSION = "0.3";
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
     
+    public static String tempPath;
+    
     public FAEscapePlanUI() {
         initComponents();
         this.loginUser.requestFocusInWindow();
@@ -46,6 +48,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         this.favsAction.setSelectedIndex(1);
         this.journalsAction.setSelectedIndex(1);
         this.notesAction.setSelectedIndex(1);
+        this.setPaths();
     }
     
     private String getOS() {
@@ -58,6 +61,18 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             return "unix";
         } else {
             throw new RuntimeException("Unsupported operating system");
+        }
+    }
+    
+    private void setPaths() {
+        if (getOS().equals("windows")) {
+            String winTempPath = System.getProperty("user.home") + "\\AppData\\Local\\Temp\\FAEscapePlan\\";
+            createDirectory(winTempPath);
+            tempPath = winTempPath;
+        } else if (getOS().equals("mac") || getOS().equals("unix")) {
+            String unixTempPath = "/tmp/FAEscapePlan/";
+            createDirectory(unixTempPath);
+            tempPath = unixTempPath;
         }
     }
     
@@ -101,19 +116,38 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         this.notesAction.setEnabled(false);
         this.backupButton.setEnabled(false);
         this.statusText.setText("Not logged in");
+        this.iconDisplay.setIcon(new ImageIcon(getClass().getResource("/resources/FAtesticon.png")));
     }
     
     private void getProfileImg() {
-        String tempPath = System.getProperty("user.home") + "\\AppData\\Local\\FAEscapePlan";
-        this.createDirectory(tempPath);
-        
+        try {
+            Document doc = Jsoup.connect("http://www.furaffinity.net/user/" + userData.getName())
+                    .cookies(userData.getCookies())
+                    .userAgent(USER_AGENT)
+                    .get();
+            String iconLink = "http:" + doc.getElementsByClass("avatar").get(0).attr("src");
+            Response iconResponse = Jsoup.connect(iconLink)
+                    .cookies(userData.getCookies())
+                    .userAgent(USER_AGENT)
+                    .maxBodySize(0)
+                    .ignoreContentType(true)
+                    .execute();
+            String iconPath = tempPath + userData.getName() + ".gif";
+            try (FileOutputStream userIcon = new FileOutputStream(new File(iconPath))) {
+                userIcon.write(iconResponse.bodyAsBytes());
+            }       
+            ImageIcon icon = new ImageIcon(iconPath);
+            this.iconDisplay.setIcon(icon);
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     private void updateTextLog(String message) {
         this.logTextBox.append(message + "\n");
         this.logTextBox.update(this.logTextBox.getGraphics());
     }
-    
+    /*
     private void loadSettings() {
         try (FileReader file = new FileReader("C:\\")) {
             file.read();
@@ -121,7 +155,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+    */
     private void createDirectory(String path) {
         if (!Files.isDirectory(Paths.get(path))) {
             boolean folderCreated = new File(path).mkdir();
@@ -195,6 +229,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 String fileType = downloadLink.substring(downloadLink.length() - 4);
                 Response response = Jsoup.connect(downloadLink)
                         .cookies(userData.getCookies())
+                        .userAgent(USER_AGENT)
                         .maxBodySize(0)
                         .ignoreContentType(true)
                         .execute();
