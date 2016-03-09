@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import org.apache.commons.io.FileUtils;
 import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
 import org.jsoup.HttpStatusException;
@@ -725,31 +726,53 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         if (!Files.isDirectory(Paths.get(this.saveLocText.getText()))) {
             JOptionPane.showMessageDialog(this, "Save location doesn't exist.");
         } else {
-            String homePath = this.saveLocText.getText() + "\\" + userData.getName();
-            createDirectory(homePath);
-            
-            switch (this.galleryAction.getSelectedIndex()) {
-                //allow fallthrough
+            try {
+                String homePath = this.saveLocText.getText() + "\\" + userData.getName();
+                createDirectory(homePath);
+                
+                switch (this.galleryAction.getSelectedIndex()) {
+                    case 0:
+                        FileUtils.deleteDirectory(new File(homePath + "\\gallery"));
+                    case 1:
+                        String galleryPath = homePath + "\\gallery";
+                        createDirectory(galleryPath);
+                        ArrayList<String> galleryIndex = indexSection("gallery");
+                        downloadImageList(galleryIndex, galleryPath);
+                        break;
+                    default:
+                        break;
+                }
+                switch (this.scrapsAction.getSelectedIndex()) {
+                    case 0:
+                        FileUtils.deleteDirectory(new File(homePath + "\\scraps"));
+                    case 1:
+                        String scrapsPath = homePath + "\\scraps";
+                        createDirectory(scrapsPath);
+                        ArrayList<String> scrapsIndex = indexSection("scraps");
+                        downloadImageList(scrapsIndex, scrapsPath);
+                        break;
+                    default:
+                        break;
+                }
+                
+                //index favs
+                switch (this.journalsAction.getSelectedIndex()) {
+                    case 0:
+                        FileUtils.deleteDirectory(new File(homePath + "\\journals"));
+                    case 1:
+                        String journalsPath = homePath + "\\journals";
+                        createDirectory(journalsPath);
+                        ArrayList<String> journalsIndex = indexJournals();
+                        //download journals
+                        break;
+                    default:
+                        break;
+                }
+                //index notes
+                
+            } catch (IOException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //index gallery
-            //if galleryAction = update or new
-            //if galleryAction = new
-            //wipe backup then proceed
-            String galleryPath = homePath + "\\gallery";
-            createDirectory(galleryPath);
-            ArrayList<String> galleryIndex = indexSection("gallery");
-            downloadImageList(galleryIndex, galleryPath);
-            //index scraps
-            String scrapsPath = homePath + "\\scraps";
-            createDirectory(scrapsPath);
-            ArrayList<String> scrapsIndex = indexSection("scraps");
-            downloadImageList(scrapsIndex, scrapsPath);
-            /*  
-                index favs
-                index journals
-                index notes
-            */
-            //downloadTestImage(); //DEBUG
         }
     }//GEN-LAST:event_backupButtonActionPerformed
 
