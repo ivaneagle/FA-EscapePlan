@@ -34,7 +34,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     
     UserData userData = new UserData();  
     
-    public static final String VERSION = "0.3";
+    public static final String VERSION = "0.4";
     public static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:44.0) Gecko/20100101 Firefox/44.0";
     
     public static String tempPath;
@@ -95,7 +95,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         this.galleryAction.setEnabled(true);
         this.scrapsAction.setEnabled(true);
         //this.favsAction.setEnabled(true);
-        //this.journalsAction.setEnabled(true);
+        this.journalsAction.setEnabled(true);
         //this.notesAction.setEnabled(true);
         this.backupButton.setEnabled(true);
         this.statusText.setText("Logged in as " + userData.getName());
@@ -212,8 +212,29 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 break;
             }
         }
-        
         return idList;
+    }
+    
+    private ArrayList<String> indexJournals() {
+        ArrayList<String> journalList = new ArrayList<>();
+        updateTextLog("Indexing journal entries...");
+        
+        try {
+            Document currentPage = Jsoup.connect("http://www.furaffinity.net/journals/" + userData.getName() + "/")
+                    .cookies(userData.getCookies())
+                    .userAgent(USER_AGENT)
+                    .get();
+            Elements elementList = currentPage.getElementsByAttributeValueMatching("id", "jid:\\d+");
+            
+            for (Element item : elementList) {
+                String cleanJid = item.attr("id").replace("jid:", "");
+                journalList.add(cleanJid);
+            }
+            
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return journalList;
     }
     
     private void downloadImageList(ArrayList<String> input, String downloadLoc) {        
@@ -246,10 +267,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             }
             
         }
-    }
-    
-    private void indexJournals() {
-        //Elements elementList = currentPage.getElementsByAttributeValueMatching("id", "jid:\\d+");
     }
     
     /**
@@ -737,10 +754,13 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     }//GEN-LAST:event_backupButtonActionPerformed
 
     private void refreshButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_refreshButtonMouseClicked
-        ArrayList galleryIndex = indexSection("gallery");
+        ArrayList<String> galleryIndex = indexSection("gallery");
         this.galleryCount.setText(String.valueOf(galleryIndex.size()));
-        ArrayList scrapsIndex = indexSection("scraps");
+        ArrayList<String> scrapsIndex = indexSection("scraps");
         this.scrapsCount.setText(String.valueOf(scrapsIndex.size()));
+        //favs
+        ArrayList<String> journalsIndex = indexJournals();
+        this.journalsCount.setText(String.valueOf(journalsIndex.size()));
     }//GEN-LAST:event_refreshButtonMouseClicked
 
     /**
