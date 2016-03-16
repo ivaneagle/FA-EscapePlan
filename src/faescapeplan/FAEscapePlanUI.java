@@ -6,12 +6,19 @@
 package faescapeplan;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,6 +26,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import org.apache.commons.io.FileUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONValue;
 import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
 import org.jsoup.HttpStatusException;
@@ -167,7 +176,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 System.out.println("Folder could not be created");
             }
         }
-
     }
     
     private ArrayList<String> indexSection(String section) {
@@ -209,7 +217,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 break;
             } catch (IOException ex) {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
-                System.out.println("An IO Exception occurred"); // DEBUG
+                System.out.println("An IO Exception occurred while indexing " + section); // DEBUG
                 break;
             }
         }
@@ -234,14 +242,15 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             
         } catch (IOException ex) {
             Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "An IOException occurred while indexing journals");
         }
         return journalList;
     }
     
-    private void downloadImageList(ArrayList<String> input, String downloadLoc) {        
-        for (String item : input) {
+    private void downloadImageList(ArrayList<String> inputList, String downloadLoc) {        
+        for (String item : inputList) {
             try {
-                updateTextLog("Getting item");
+                updateTextLog("Getting item: " + item);
                 Document doc = Jsoup.connect("http://www.furaffinity.net/view/" + item + "/")
                         .cookies(userData.getCookies())
                         .userAgent(USER_AGENT)
@@ -255,9 +264,12 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                         .maxBodySize(0)
                         .ignoreContentType(true)
                         .execute();
-                updateTextLog("Saving item");
+                
                 try (FileOutputStream out = new FileOutputStream(new File(downloadLoc + "\\" + downloadTitle + fileType))) {
                     out.write(response.bodyAsBytes());
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                    updateTextLog("Could not save file");
                 }
             } catch (SocketTimeoutException ex) {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -266,7 +278,62 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
                 updateTextLog("An IO Exception occurred");
             }
-            
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private void downloadJournals(ArrayList<String> journalList) {
+        JSONArray jsonList = new JSONArray();
+        int orderLabel = journalList.size();
+        String downloadLoc = this.saveLocText.getText();
+        Path jsonPath = Paths.get(downloadLoc + "\\" + userData.getName() + "\\journals\\journals.json");
+        
+        try {
+            Files.deleteIfExists(jsonPath);
+            Files.createFile(jsonPath);
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+            JOptionPane.showMessageDialog(this, "A critical IO exception occurred in method: downloadJournals");
+        }
+        
+        for (String item : journalList) {
+            try {
+                Map<String, String> jsonMap = new LinkedHashMap<>();
+                Document doc = Jsoup.connect("http://www.furaffinity.net/journal/" + item + "/")
+                        .cookies(userData.getCookies())
+                        .userAgent(USER_AGENT)
+                        .get();
+                String title = doc.title().split(" -- ")[0];
+                String date = doc.getElementsByClass("popup_date").get(0).attr("title"); 
+                String body = doc.getElementsByClass("journal-body").get(0).html();
+                jsonMap.put("title", title);
+                jsonMap.put("date", date);
+                jsonMap.put("body", body);
+                jsonList.add(jsonMap);
+                Path journalPath = Paths.get(downloadLoc, "\\" + userData.getName() + "\\journals\\" + orderLabel + "_" + title + ".txt");
+                
+                try (FileWriter journalWriter = new FileWriter(new File(journalPath.toString()))) {
+                    journalWriter.append(title + System.getProperty("line.separator"));
+                    journalWriter.append(date + System.getProperty("line.separator"));
+                    journalWriter.append(body + System.getProperty("line.separator"));
+                }
+            } catch (FileAlreadyExistsException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                updateTextLog("File already exists");
+            } catch (IOException ex) {
+                Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+                updateTextLog("An IO Exception occurred while downloading journal: " + item);
+            } finally {
+                orderLabel--;
+            }
+        }
+        
+        String jsonString = JSONValue.toJSONString(jsonList);
+        
+        try {
+            Files.write(jsonPath, Arrays.asList(jsonString), StandardOpenOption.WRITE);
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -576,6 +643,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
 
             logTextBox.setEditable(false);
             logTextBox.setColumns(20);
+            logTextBox.setFont(new java.awt.Font("Monospaced", 0, 12)); // NOI18N
             logTextBox.setRows(5);
             jScrollPane1.setViewportView(logTextBox);
 
@@ -763,7 +831,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                         String journalsPath = homePath + "\\journals";
                         createDirectory(journalsPath);
                         ArrayList<String> journalsIndex = indexJournals();
-                        //download journals
+                        downloadJournals(journalsIndex);
                         break;
                     default:
                         break;
@@ -784,6 +852,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         //favs
         ArrayList<String> journalsIndex = indexJournals();
         this.journalsCount.setText(String.valueOf(journalsIndex.size()));
+        //notes
     }//GEN-LAST:event_refreshButtonMouseClicked
 
     /**
