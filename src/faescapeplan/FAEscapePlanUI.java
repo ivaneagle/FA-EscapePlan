@@ -247,6 +247,32 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
         return journalList;
     }
     
+    private String removeHtmlTags(String rawText) {
+        String body = rawText;
+        body = body.replaceAll("<br>\\s*" + System.lineSeparator(), "")
+                .replaceAll("<br>\\s*", System.lineSeparator())
+                .replaceAll("<[^>]*>", "");
+        return body;
+    }
+    
+    private void downloadProfile() {
+        try {
+            Document userPage = Jsoup.connect("http://www.furaffinity.net/user/" + userData.getName() + "/")
+                    .cookies(userData.getCookies())
+                    .userAgent(USER_AGENT)
+                    .get();
+            String body = userPage.getElementsByClass("ldot").get(0).html();
+            Path profilePath = Paths.get(this.saveLocText.getText() + "\\" + userData.getName() + "\\userprofile.txt");
+            String parsedBody = removeHtmlTags(body);
+            
+            try (FileWriter profileWriter = new FileWriter(new File(profilePath.toString()))) {
+                profileWriter.write(parsedBody);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private void downloadImageList(ArrayList<String> inputList, String downloadLoc) {        
         for (String item : inputList) {
             try {
@@ -284,7 +310,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     private void downloadJournals(ArrayList<String> journalList) {
         JSONArray jsonList = new JSONArray();
-        int orderLabel = journalList.size();
         String downloadLoc = this.saveLocText.getText();
         Path jsonPath = Paths.get(downloadLoc + "\\" + userData.getName() + "\\journals\\journals.json");
         
@@ -310,12 +335,13 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
                 jsonMap.put("date", date);
                 jsonMap.put("body", body);
                 jsonList.add(jsonMap);
-                Path journalPath = Paths.get(downloadLoc, "\\" + userData.getName() + "\\journals\\" + orderLabel + "_" + title + ".txt");
+                Path journalPath = Paths.get(downloadLoc, "\\" + userData.getName() + "\\journals\\" + item + "_" + title + ".txt");
+                String bodyParsed = removeHtmlTags(body);
                 
                 try (FileWriter journalWriter = new FileWriter(new File(journalPath.toString()))) {
                     journalWriter.append(title + System.getProperty("line.separator"));
                     journalWriter.append(date + System.getProperty("line.separator"));
-                    journalWriter.append(body + System.getProperty("line.separator"));
+                    journalWriter.append(bodyParsed + System.getProperty("line.separator"));
                 }
             } catch (FileAlreadyExistsException ex) {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -323,8 +349,6 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             } catch (IOException ex) {
                 Logger.getLogger(FAEscapePlanUI.class.getName()).log(Level.SEVERE, null, ex);
                 updateTextLog("An IO Exception occurred while downloading journal: " + item);
-            } finally {
-                orderLabel--;
             }
         }
         
@@ -797,6 +821,7 @@ public class FAEscapePlanUI extends javax.swing.JFrame {
             try {
                 String homePath = this.saveLocText.getText() + "\\" + userData.getName();
                 createDirectory(homePath);
+                downloadProfile(); //debug
                 
                 switch (this.galleryAction.getSelectedIndex()) {
                     case 0:
